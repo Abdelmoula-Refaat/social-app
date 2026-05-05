@@ -41,7 +41,7 @@ const userSchema = new mongoose_1.default.Schema({
             return this.provider == user_enum_1.ProviderEnum.local ? true : false;
         },
         trim: true,
-        min: 20,
+        min: 18,
         max: 60,
     },
     phone: {
@@ -67,7 +67,9 @@ const userSchema = new mongoose_1.default.Schema({
         enum: user_enum_1.ProviderEnum,
         default: user_enum_1.ProviderEnum.local,
     },
+    profilePic: String,
     confrimed: Boolean,
+    deletedAt: String,
 }, {
     timestamps: true,
     strictQuery: true,
@@ -82,9 +84,17 @@ userSchema
     .set(function (val) {
     this.set({ firstName: val.split(" ")[0], lastName: val.split(" ")[1] });
 });
-userSchema.pre("updateOne", { document: true, query: false }, function () {
-    console.log("--pre updateOne hook--");
-    console.log(this);
+userSchema.pre("findOne", function () {
+    console.log("--pre hook findOne--");
+    console.log(this.getQuery);
+    const { paranoid, ...rest } = this.getQuery();
+    console.log({ rest });
+    if (paranoid == false) {
+        this.setQuery({ ...rest });
+    }
+    else {
+        this.setQuery({ ...rest, deletedAt: { $exists: false } });
+    }
 });
 const UserModel = mongoose_1.default.models.User || mongoose_1.default.model("User", userSchema);
 exports.default = UserModel;

@@ -11,7 +11,7 @@ export interface IUser {
   _id?: Types.ObjectId;
   firstName: string;
   lastName: string;
-  userName: string;
+  userName?: string;
   email: string;
   password: string;
   age: number;
@@ -20,7 +20,9 @@ export interface IUser {
   gender?: GenderEnum;
   role?: RoleEnum;
   provider?: ProviderEnum;
+  profilePic?: string;
   confrimed?: boolean;
+  deletedAt?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -62,7 +64,7 @@ const userSchema = new mongoose.Schema<IUser>(
         return this.provider == ProviderEnum.local ? true : false
       },
       trim: true,
-      min: 20,
+      min: 18,
       max: 60,
     },
     phone: {
@@ -88,8 +90,9 @@ const userSchema = new mongoose.Schema<IUser>(
       enum: ProviderEnum,
       default: ProviderEnum.local,
     },
-
+    profilePic: String,
     confrimed: Boolean,
+    deletedAt: String,
   },
   {
     timestamps: true,
@@ -149,11 +152,36 @@ userSchema
 //   }
 // });
 
-userSchema.pre("updateOne", {document: true, query: false }, function () {
-  console.log("--pre updateOne hook--");
-  console.log(this);
+// userSchema.pre("updateOne", {document: true, query: false }, function () {
+//   console.log("--pre updateOne hook--");
+//   console.log(this);
   
-});
+// });
+
+// userSchema.pre("insertMany", function (doc) {
+//   console.log("--pre hook insertMany--");
+//   console.log(this);
+//   console.log(doc);
+  
+// })
+
+// userSchema.post("insertMany", function (doc) {
+//   console.log("--post hook insertMany--");
+//   console.log(this);
+//   console.log(doc);
+// });
+
+userSchema.pre("findOne", function () {
+  console.log("--pre hook findOne--");
+  console.log(this.getQuery);
+  const {paranoid, ...rest} = this.getQuery();
+  console.log({rest});
+  if(paranoid == false) {
+    this.setQuery({...rest})
+  }else{
+    this.setQuery({...rest, deletedAt: {$exists: false}})
+  }
+})
 
 const UserModel =
   mongoose.models.User || mongoose.model<IUser>("User", userSchema);

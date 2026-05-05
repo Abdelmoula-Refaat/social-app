@@ -26,11 +26,13 @@ import redisService from "../../common/service/redis.service";
 import { reSendOtpDto } from "./auth.dto";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import tokenService from "../../common/service/token.service";
+import { S3Service } from "../../common/service/s3.service";
 
 class AuthService {
   private readonly _userRepo = new UserRepository();
   private readonly _redisService = RedisService;
   private readonly _tokenService = TokenService;
+  private readonly _s3Service = new S3Service();
 
   constructor() {}
 
@@ -307,6 +309,10 @@ class AuthService {
             })
         }
 
+        if(user.provider == ProviderEnum.local){
+            throw new AppError("login please on system");
+        }
+
         // login
         const access_token = tokenService.GenerateToken({
             payload: {
@@ -320,7 +326,42 @@ class AuthService {
         })
     }
 
+    uploadImage = async (req: Request, res: Response, next: NextFunction) => {
 
+        // const key = await this._s3Service.uploadFile({
+        //     file: req.file!,
+        //     path: "General",
+
+        // }); 
+        
+        // const key = await this._s3Service.uploadLargeFile({
+        //     file: req.file!,
+        //     path: "users/large",
+
+        // }); 
+        
+        // const urls = await this._s3Service.uploadFiles({
+        //     files: req.files as Express.Multer.File[],
+        //     path: "users/many",
+
+        // });  
+
+        const { contentType, fileName } = req.body;
+        
+        const { url, Key} = await this._s3Service.createPresignedUrl({
+            fileName,
+            contentType,
+            path: `users/${req.user?._id}`,
+            
+        });
+        
+        await this._userRepo.findOneAndUpdate({
+            filter: { _id: req?.user?._id },
+            update: { profilePic: Key },
+        })
+
+        successResponse({ res, data: { Key, url} });
+    }
  
 }
 

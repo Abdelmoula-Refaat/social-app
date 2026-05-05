@@ -12,7 +12,9 @@ const global_error_handler_1 = require("./common/utils/global-error-handler");
 const auth_controller_1 = __importDefault(require("./modules/auth/auth.controller"));
 const connectionDB_1 = require("./DB/connectionDB");
 const redis_service_1 = __importDefault(require("./common/service/redis.service"));
-const user_modal_1 = __importDefault(require("./DB/models/user.modal"));
+const s3_service_1 = require("./common/service/s3.service");
+const promises_1 = require("node:stream/promises");
+const response_success_1 = require("./common/utils/security/response.success");
 const app = (0, express_1.default)();
 const port = Number(config_service_1.PORT);
 const bootstrap = async () => {
@@ -30,10 +32,50 @@ const bootstrap = async () => {
     app.get("/", (req, res, next) => {
         res.status(200).json({ message: "Welcome on SocialMedia App........" });
     });
+    app.get("/uploadDeleteFolder", async (req, res, next) => {
+        const { folderName } = req.body;
+        let result = await new s3_service_1.S3Service().deleteFolder(folderName);
+        (0, response_success_1.successResponse)({ res, data: result });
+    });
+    app.get("/uploadDeleteFiles", async (req, res, next) => {
+        const { keys } = req.body;
+        let result = await new s3_service_1.S3Service().deleteFiles(keys);
+        (0, response_success_1.successResponse)({ res, data: result });
+    });
+    app.get("/uploadDeleteFile", async (req, res, next) => {
+        const { Key } = req.query;
+        let result = await new s3_service_1.S3Service().deleteFile(Key);
+        (0, response_success_1.successResponse)({ res, data: result });
+    });
+    app.get("/upload/", async (req, res, next) => {
+        const { folderName } = req.query;
+        const result = await new s3_service_1.S3Service().getFiles(folderName);
+        const resultMapped = result.Contents?.map((file) => {
+            return { Key: file.Key };
+        });
+        (0, response_success_1.successResponse)({ res, data: resultMapped });
+    });
+    app.get("/upload/pre-signed/*path", async (req, res, next) => {
+        const { path } = req.params;
+        const { download } = req.query;
+        const Key = path.join("/");
+        const url = await new s3_service_1.S3Service().getPresignedUrl({ Key, download: download ? download : undefined });
+        (0, response_success_1.successResponse)({ res, data: url });
+    });
+    app.get("/upload/*path", async (req, res, next) => {
+        const { path } = req.params;
+        const { download } = req.query;
+        const Key = path.join("/");
+        const result = await new s3_service_1.S3Service().getFile(Key);
+        const stream = result.Body;
+        res.setHeader("Content-Type", result.ContentType);
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        if (download && download === "true") {
+            res.setHeader("Content-Disposition", `attachment; filename="${path.pop()}"`);
+        }
+        await (0, promises_1.pipeline)(stream, res);
+    });
     async function test() {
-        const user = new user_modal_1.default({});
-        await user.updateOne({ $set: { x: 'test' } });
-        console.log("user updated");
     }
     (0, connectionDB_1.checkConnectionDB)();
     await redis_service_1.default.connect();

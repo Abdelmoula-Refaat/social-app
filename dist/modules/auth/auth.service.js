@@ -20,10 +20,12 @@ const config_service_1 = require("../../config/config.service");
 const redis_service_2 = __importDefault(require("../../common/service/redis.service"));
 const google_auth_library_1 = require("google-auth-library");
 const token_service_2 = __importDefault(require("../../common/service/token.service"));
+const s3_service_1 = require("../../common/service/s3.service");
 class AuthService {
     _userRepo = new user_repository_1.default();
     _redisService = redis_service_1.default;
     _tokenService = token_service_1.default;
+    _s3Service = new s3_service_1.S3Service();
     constructor() { }
     sendEmailOtp = async ({ email, subject }) => {
         const isBlocked = await redis_service_2.default.ttl(redis_service_2.default.blocked_otp_key(email));
@@ -244,6 +246,9 @@ class AuthService {
                 provider: user_enum_1.ProviderEnum.google
             });
         }
+        if (user.provider == user_enum_1.ProviderEnum.local) {
+            throw new global_error_handler_1.AppError("login please on system");
+        }
         const access_token = token_service_2.default.GenerateToken({
             payload: {
                 id: user._id,
@@ -254,6 +259,19 @@ class AuthService {
                 expiresIn: "1day",
             }
         });
+    };
+    uploadImage = async (req, res, next) => {
+        const { contentType, fileName } = req.body;
+        const { url, Key } = await this._s3Service.createPresignedUrl({
+            fileName,
+            contentType,
+            path: `users/${req.user?._id}`,
+        });
+        await this._userRepo.findOneAndUpdate({
+            filter: { _id: req?.user?._id },
+            update: { profilePic: Key },
+        });
+        (0, response_success_1.successResponse)({ res, data: { Key, url } });
     };
 }
 exports.default = new AuthService();
