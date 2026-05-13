@@ -34,5 +34,37 @@ class BaseRepository {
     findOneAndDelete({ filter, options, }) {
         return this.model.findOneAndDelete(filter, options);
     }
+    async paginate({ page, limit, sort, populate, search, }) {
+        page = +page || 1;
+        limit = +limit || 1;
+        if (page < 1)
+            page = 1;
+        if (limit < 1)
+            limit = 2;
+        const skip = (page - 1) * limit;
+        const [data, totalDoc] = await Promise.all([
+            await this.model.find({ ...(search ?? {}) }).limit(limit).skip(skip).sort(sort).populate(populate).exec(),
+            await this.model.countDocuments({ ...(search ?? {}) })
+        ]);
+        const totalPages = Math.ceil(totalDoc / limit);
+        return {
+            meta: {
+                currentPage: page,
+                totalPages,
+                limit,
+                totalDoc
+            },
+            data
+        };
+    }
+    insertMany(docs) {
+        return this.model.insertMany(docs);
+    }
+    updateMany(filter, update) {
+        return this.model.updateMany(filter, update);
+    }
+    deleteMany(filter) {
+        return this.model.deleteMany(filter);
+    }
 }
 exports.default = BaseRepository;

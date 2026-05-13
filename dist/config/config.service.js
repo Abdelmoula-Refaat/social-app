@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AWS_SECRET_ACCESS_KEY = exports.AWS_ACCESS_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.CLIENT_ID = exports.EXPIRES_TOKEN = exports.ORIGINS = exports.PERFIX_Admin = exports.PERFIX_USER = exports.REFRESH_SECRET_KEY_Admin = exports.REFRESH_SECRET_KEY_USER = exports.ACCESS_SECRET_KEY_Admin = exports.ACCESS_SECRET_KEY_USER = exports.REDIS_URL = exports.PASSWORD = exports.EMAIL = exports.SALT_ROUNDS = exports.MONGO_URI = exports.PORT = void 0;
+exports.AWS_SECRET_ACCESS_KEY = exports.AWS_ACCESS_KEY = exports.AWS_BUCKET_NAME = exports.AWS_REGION = exports.FIREBASE_SERVICE_ACCOUNT_PATH = exports.CLIENT_ID = exports.EXPIRES_TOKEN = exports.ORIGINS = exports.PERFIX_Admin = exports.PERFIX_USER = exports.REFRESH_SECRET_KEY_Admin = exports.REFRESH_SECRET_KEY_USER = exports.ACCESS_SECRET_KEY_Admin = exports.ACCESS_SECRET_KEY_USER = exports.REDIS_URL = exports.PASSWORD = exports.EMAIL = exports.SALT_ROUNDS = exports.MONGO_URI = exports.PORT = void 0;
 const path_1 = require("path");
 const dotenv_1 = require("dotenv");
 const NODE_ENV = process.env.NODE_ENV;
@@ -20,6 +20,7 @@ exports.PERFIX_Admin = process.env.PERFIX_Admin;
 exports.ORIGINS = process.env.ORIGINS?.split(",") || [];
 exports.EXPIRES_TOKEN = 60 * 30;
 exports.CLIENT_ID = process.env.CLIENT_ID;
+exports.FIREBASE_SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
 exports.AWS_REGION = process.env.AWS_REGION;
 exports.AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME;
 exports.AWS_ACCESS_KEY = process.env.AWS_ACCESS_KEY;

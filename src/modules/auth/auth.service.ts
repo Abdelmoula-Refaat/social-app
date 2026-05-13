@@ -27,12 +27,14 @@ import { reSendOtpDto } from "./auth.dto";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import tokenService from "../../common/service/token.service";
 import { S3Service } from "../../common/service/s3.service";
+import notificationService from "../../common/service/notification.service";
 
 class AuthService {
   private readonly _userRepo = new UserRepository();
   private readonly _redisService = RedisService;
   private readonly _tokenService = TokenService;
   private readonly _s3Service = new S3Service();
+  private readonly _notificationService = notificationService;
 
   constructor() {}
 
@@ -167,7 +169,7 @@ class AuthService {
   };
 
   signin = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password }: SigninDto = req.body;
+    const { email, password, fcm }: SigninDto = req.body;
     const user = await this._userRepo.findOne({
       filter: {
         email,
@@ -215,6 +217,20 @@ class AuthService {
         jwtid: uuid,
       },
     });
+
+    if (fcm) {
+     await this._redisService.addFCM({ userId: user._id, FCMToken: fcm })
+     const tokens = await this._redisService.getFCMs(user._id)
+
+     await this._notificationService.sendNotifications({
+      tokens,
+      data: {
+        title: `hi ${user.firstName}`,
+        body: `new login at ${new Date()}`,
+      },
+     })
+     
+    }
 
     successResponse({
       res,
@@ -325,6 +341,39 @@ class AuthService {
             }
         })
     }
+
+    updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+        const { firstName, lastName, phone, address, gender } = req.body;
+        const update: Record<string, unknown> = {};
+        if (firstName !== undefined) update.firstName = firstName;
+        if (lastName !== undefined) update.lastName = lastName;
+        if (address !== undefined) update.address = address;
+        if (gender !== undefined) update.gender = gender;
+        if (phone !== undefined) update.phone = encrypt(phone);
+
+        const user = await this._userRepo.findOneAndUpdate({
+            filter: { _id: req.user!._id },
+            update: { $set: update },
+        });
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+        successResponse({ res, data: user });
+    };
+
+    deleteAccount = async (req: Request, res: Response, next: NextFunction) => {
+        const permanent = req.query.permanent === "true";
+        const id = req.user!._id;
+        if (permanent) {
+            await this._userRepo.findOneAndDelete({ filter: { _id: id } });
+        } else {
+            await this._userRepo.findOneAndUpdate({
+                filter: { _id: id },
+                update: { $set: { deletedAt: new Date() } },
+            });
+        }
+        successResponse({ res, data: { deleted: true, permanent } });
+    };
 
     uploadImage = async (req: Request, res: Response, next: NextFunction) => {
 

@@ -50,5 +50,7 @@ authRouter.post(/forget-password/, (0, validation_1.validation)(authValidation.f
 authRouter.patch(/reset-password/, (0, validation_1.validation)(authValidation.resetPasswordSchema), auth_service_1.default.resetPassword);
 authRouter.post(/signin/, (0, validation_1.validation)(authValidation.signinSchema), auth_service_1.default.signin);
 authRouter.get(/profile/, authentication_1.authentication, auth_service_1.default.getProfile);
+authRouter.patch("/profile", authentication_1.authentication, (0, validation_1.validation)(authValidation.updateProfileSchema), auth_service_1.default.updateProfile);
+authRouter.delete("/account", authentication_1.authentication, (0, validation_1.validation)(authValidation.deleteAccountQuery), auth_service_1.default.deleteAccount);
 authRouter.post("/upload", authentication_1.authentication, auth_service_1.default.uploadImage);
 exports.default = authRouter;

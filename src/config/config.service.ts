@@ -21,6 +21,8 @@ export const ORIGINS = process.env.ORIGINS?.split(",") || [];
 export const EXPIRES_TOKEN = 60 * 30;
 export const CLIENT_ID = process.env.CLIENT_ID;
 
+export const FIREBASE_SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+
 
 export const AWS_REGION = process.env.AWS_REGION!;
 export const AWS_BUCKET_NAME = process.env.AWS_BUCKET_NAME!;

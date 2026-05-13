@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPasswordSchema = exports.forgetPasswordSchema = exports.confirmEmailSchema = exports.signupSchema = exports.signinSchema = exports.reSendOtpSchema = void 0;
+exports.deleteAccountQuery = exports.updateProfileSchema = exports.resetPasswordSchema = exports.forgetPasswordSchema = exports.confirmEmailSchema = exports.signupSchema = exports.signinSchema = exports.reSendOtpSchema = void 0;
 const z = __importStar(require("zod"));
 const user_enum_1 = require("../../common/enum/user.enum");
 exports.reSendOtpSchema = {
@@ -44,6 +44,7 @@ exports.reSendOtpSchema = {
 exports.signinSchema = {
     body: exports.reSendOtpSchema.body.safeExtend({
         password: z.string().min(6),
+        fcm: z.string().optional(),
     }),
 };
 exports.signupSchema = {
@@ -96,5 +97,29 @@ exports.resetPasswordSchema = {
                 message: "Passwords do not match",
             });
         }
+    }),
+};
+exports.updateProfileSchema = {
+    body: z
+        .strictObject({
+        firstName: z.string().min(3).max(25).optional(),
+        lastName: z.string().min(3).max(25).optional(),
+        phone: z.string().min(3).max(25).optional(),
+        address: z.string().min(3).max(100).optional(),
+        gender: z.enum(user_enum_1.GenderEnum).optional(),
+    })
+        .superRefine((data, ctx) => {
+        if (!Object.keys(data).length) {
+            ctx.addIssue({
+                code: "custom",
+                message: "At least one field is required",
+                path: ["firstName"],
+            });
+        }
+    }),
+};
+exports.deleteAccountQuery = {
+    query: z.object({
+        permanent: z.enum(["true", "false"]).optional(),
     }),
 };

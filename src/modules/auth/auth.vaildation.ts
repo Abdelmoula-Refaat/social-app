@@ -10,6 +10,7 @@ export const reSendOtpSchema = {
 export const signinSchema = {
   body: reSendOtpSchema.body.safeExtend({
     password: z.string().min(6),
+    fcm: z.string().optional(),
   }),
 };
 
@@ -67,4 +68,30 @@ export const resetPasswordSchema = {
         });
       }
     }),
+};
+
+export const updateProfileSchema = {
+  body: z
+    .strictObject({
+      firstName: z.string().min(3).max(25).optional(),
+      lastName: z.string().min(3).max(25).optional(),
+      phone: z.string().min(3).max(25).optional(),
+      address: z.string().min(3).max(100).optional(),
+      gender: z.enum(GenderEnum).optional(),
+    })
+    .superRefine((data, ctx) => {
+      if (!Object.keys(data).length) {
+        ctx.addIssue({
+          code: "custom",
+          message: "At least one field is required",
+          path: ["firstName"],
+        });
+      }
+    }),
+};
+
+export const deleteAccountQuery = {
+  query: z.object({
+    permanent: z.enum(["true", "false"]).optional(),
+  }),
 };

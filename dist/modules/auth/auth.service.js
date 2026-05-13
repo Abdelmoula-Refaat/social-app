@@ -21,11 +21,13 @@ const redis_service_2 = __importDefault(require("../../common/service/redis.serv
 const google_auth_library_1 = require("google-auth-library");
 const token_service_2 = __importDefault(require("../../common/service/token.service"));
 const s3_service_1 = require("../../common/service/s3.service");
+const notification_service_1 = __importDefault(require("../../common/service/notification.service"));
 class AuthService {
     _userRepo = new user_repository_1.default();
     _redisService = redis_service_1.default;
     _tokenService = token_service_1.default;
     _s3Service = new s3_service_1.S3Service();
+    _notificationService = notification_service_1.default;
     constructor() { }
     sendEmailOtp = async ({ email, subject }) => {
         const isBlocked = await redis_service_2.default.ttl(redis_service_2.default.blocked_otp_key(email));
@@ -129,7 +131,7 @@ class AuthService {
         });
     };
     signin = async (req, res, next) => {
-        const { email, password } = req.body;
+        const { email, password, fcm } = req.body;
         const user = await this._userRepo.findOne({
             filter: {
                 email,
@@ -170,6 +172,17 @@ class AuthService {
                 jwtid: uuid,
             },
         });
+        if (fcm) {
+            await this._redisService.addFCM({ userId: user._id, FCMToken: fcm });
+            const tokens = await this._redisService.getFCMs(user._id);
+            await this._notificationService.sendNotifications({
+                tokens,
+                data: {
+                    title: `hi ${user.firstName}`,
+                    body: `new login at ${new Date()}`,
+                },
+            });
+        }
         (0, response_success_1.successResponse)({
             res,
             message: "User signed in successfully",
@@ -259,6 +272,42 @@ class AuthService {
                 expiresIn: "1day",
             }
         });
+    };
+    updateProfile = async (req, res, next) => {
+        const { firstName, lastName, phone, address, gender } = req.body;
+        const update = {};
+        if (firstName !== undefined)
+            update.firstName = firstName;
+        if (lastName !== undefined)
+            update.lastName = lastName;
+        if (address !== undefined)
+            update.address = address;
+        if (gender !== undefined)
+            update.gender = gender;
+        if (phone !== undefined)
+            update.phone = (0, encrypt_security_1.encrypt)(phone);
+        const user = await this._userRepo.findOneAndUpdate({
+            filter: { _id: req.user._id },
+            update: { $set: update },
+        });
+        if (!user) {
+            throw new global_error_handler_1.AppError("User not found", 404);
+        }
+        (0, response_success_1.successResponse)({ res, data: user });
+    };
+    deleteAccount = async (req, res, next) => {
+        const permanent = req.query.permanent === "true";
+        const id = req.user._id;
+        if (permanent) {
+            await this._userRepo.findOneAndDelete({ filter: { _id: id } });
+        }
+        else {
+            await this._userRepo.findOneAndUpdate({
+                filter: { _id: id },
+                update: { $set: { deletedAt: new Date() } },
+            });
+        }
+        (0, response_success_1.successResponse)({ res, data: { deleted: true, permanent } });
     };
     uploadImage = async (req, res, next) => {
         const { contentType, fileName } = req.body;

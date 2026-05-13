@@ -8,10 +8,17 @@ import { AppError, globalErrorHandler } from "./common/utils/global-error-handle
 import authRouter from "./modules/auth/auth.controller";
 import { checkConnectionDB } from "./DB/connectionDB";
 import RedisService from "./common/service/redis.service";
-import UserModel from "./DB/models/user.modal";
 import { S3Service } from "./common/service/s3.service";
 import { pipeline } from "node:stream/promises";
 import { successResponse } from "./common/utils/security/response.success";
+import postRouter from "./modules/posts/post.controller";
+import storyRouter from "./modules/stories/story.controller";
+import {
+  userNotificationsRouter,
+  adminNotificationsRouter,
+} from "./modules/notifications/notifications.controller";
+import dashboardRouter from "./modules/dashboard/dashboard.controller";
+import usersRouter from "./modules/users/users.controller";
 
 const app: express.Application = express();
 const port:number = Number(PORT);
@@ -34,6 +41,19 @@ const bootstrap = async () => {
     app.get("/", (req: Request, res: Response, next: NextFunction) => {
         res.status(200).json({ message: "Welcome on SocialMedia App........" });
     });
+
+    // app.post("/send-notification", async (req: Request, res: Response, next: NextFunction) => {
+        
+    //     await notificationService.sendNotification({
+    //         token: req.body.token,
+    //         data: {
+    //             title: "Hello",
+    //             body: "Welcome on SocialMedia App........"
+    //         }
+    //     })
+    //     console.log({ token: req.body.token});
+    // });
+
 
     app.get("/uploadDeleteFolder", async (req: Request, res: Response, next: NextFunction) => {
         const { folderName } = req.body as {folderName: string};
@@ -144,6 +164,12 @@ const bootstrap = async () => {
     
 
     app.use("/auth", authRouter);
+    app.use("/posts", postRouter);
+    app.use("/stories", storyRouter);
+    app.use("/notifications", userNotificationsRouter);
+    app.use("/admin/notifications", adminNotificationsRouter);
+    app.use("/admin/dashboard", dashboardRouter);
+    app.use("/users", usersRouter);
 
     app.use("{*demo}", (req: Request, res: Response, next: NextFunction) => {
         throw new AppError(`Url ${req.originalUrl} with method ${req.method} not found`, 404);

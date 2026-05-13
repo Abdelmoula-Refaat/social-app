@@ -16,6 +16,18 @@ authRouter.post( /forget-password/, validation(authValidation.forgetPasswordSche
 authRouter.patch( /reset-password/, validation(authValidation.resetPasswordSchema), AuthService.resetPassword, );
 authRouter.post( /signin/, validation(authValidation.signinSchema), AuthService.signin, );
 authRouter.get(/profile/, authentication, AuthService.getProfile);
+authRouter.patch(
+    "/profile",
+    authentication,
+    validation(authValidation.updateProfileSchema),
+    AuthService.updateProfile,
+);
+authRouter.delete(
+    "/account",
+    authentication,
+    validation(authValidation.deleteAccountQuery),
+    AuthService.deleteAccount,
+);
 authRouter.post("/upload",
     authentication,
     // multerCloud({ store_type: Store_Enum.memory }).array("attachments"),

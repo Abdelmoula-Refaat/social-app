@@ -119,5 +119,23 @@ class RedisService {
             console.error("Error incrementing value in Redis", err);
         }
     };
+    key(userId) {
+        return `user:FCM:${userId}`;
+    }
+    async addFCM({ userId, FCMToken }) {
+        return await this.client.sAdd(this.key(userId), FCMToken);
+    }
+    async removeFCM({ userId, FCMToken }) {
+        return await this.client.sRem(this.key(userId), FCMToken);
+    }
+    async getFCMs(userId) {
+        return await this.client.sMembers(this.key(userId));
+    }
+    async hasFCMs(userId) {
+        return await this.client.sCard(this.key(userId));
+    }
+    async removeFCMUser(userId) {
+        return await this.client.del(this.key(userId));
+    }
 }
 exports.default = new RedisService();

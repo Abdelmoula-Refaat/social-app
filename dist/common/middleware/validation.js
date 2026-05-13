@@ -8,6 +8,12 @@ const validation = (schema) => {
         for (const key of Object.keys(schema)) {
             if (!schema[key])
                 continue;
+            if (req?.file) {
+                req.body.attachment = req.file;
+            }
+            if (req?.files) {
+                req.body.attachments = req.files;
+            }
             const result = schema[key].safeParse(req[key]);
             if (!result.success) {
                 validationErro.push(result.error.message);

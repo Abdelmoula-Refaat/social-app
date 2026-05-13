@@ -6,6 +6,7 @@ import { generateOtp, sendEmail } from "../../common/utils/email/send.email";
 import { EmailEnum } from "../../common/enum/email.enum";
 import { emailTemplate } from "../../common/utils/email/email.template";
 import { eventEmitter } from "../../common/utils/email/email.events";
+import { applyParanoidPlugin } from "../plugins/paranoid.plugin";
 
 export interface IUser {
   _id?: Types.ObjectId;
@@ -22,7 +23,8 @@ export interface IUser {
   provider?: ProviderEnum;
   profilePic?: string;
   confrimed?: boolean;
-  deletedAt?: string;
+  friends?: Types.ObjectId[];
+  deletedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -92,7 +94,8 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     profilePic: String,
     confrimed: Boolean,
-    deletedAt: String,
+    friends:[{type: Types.ObjectId, ref: "User"}],
+    deletedAt: { type: Date },
   },
   {
     timestamps: true,
@@ -171,17 +174,38 @@ userSchema
 //   console.log(doc);
 // });
 
-userSchema.pre("findOne", function () {
-  console.log("--pre hook findOne--");
-  console.log(this.getQuery);
-  const {paranoid, ...rest} = this.getQuery();
-  console.log({rest});
-  if(paranoid == false) {
-    this.setQuery({...rest})
-  }else{
-    this.setQuery({...rest, deletedAt: {$exists: false}})
+applyParanoidPlugin(userSchema);
+
+userSchema.post("findOneAndUpdate", async function (doc: IUser | null) {
+  if (!doc?._id || !doc.deletedAt) return;
+  const Post = mongoose.model("Post");
+  const Comment = mongoose.model("Comment");
+  const postIds = await Post.distinct("_id", {
+    createdBy: doc._id,
+    deletedAt: { $exists: false },
+  });
+  await Post.updateMany(
+    { createdBy: doc._id, deletedAt: { $exists: false } },
+    { $set: { deletedAt: new Date() } },
+  );
+  if (postIds.length) {
+    await Comment.updateMany(
+      { post: { $in: postIds }, deletedAt: { $exists: false } },
+      { $set: { deletedAt: new Date() } },
+    );
   }
-})
+});
+
+userSchema.post("findOneAndDelete", async function (doc: IUser | null) {
+  if (!doc?._id) return;
+  const Post = mongoose.model("Post");
+  const Comment = mongoose.model("Comment");
+  const postIds = await Post.distinct("_id", { createdBy: doc._id });
+  if (postIds.length) {
+    await Comment.deleteMany({ post: { $in: postIds } });
+  }
+  await Post.deleteMany({ createdBy: doc._id });
+});
 
 const UserModel =
   mongoose.models.User || mongoose.model<IUser>("User", userSchema);

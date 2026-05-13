@@ -1,3 +1,5 @@
 node_modules/
 .env.development
 .env.production
+**/firebase-adminsdk*.json
+**/social-media-*-firebase-adminsdk*.json

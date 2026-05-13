@@ -15,6 +15,11 @@ const redis_service_1 = __importDefault(require("./common/service/redis.service"
 const s3_service_1 = require("./common/service/s3.service");
 const promises_1 = require("node:stream/promises");
 const response_success_1 = require("./common/utils/security/response.success");
+const post_controller_1 = __importDefault(require("./modules/posts/post.controller"));
+const story_controller_1 = __importDefault(require("./modules/stories/story.controller"));
+const notifications_controller_1 = require("./modules/notifications/notifications.controller");
+const dashboard_controller_1 = __importDefault(require("./modules/dashboard/dashboard.controller"));
+const users_controller_1 = __importDefault(require("./modules/users/users.controller"));
 const app = (0, express_1.default)();
 const port = Number(config_service_1.PORT);
 const bootstrap = async () => {
@@ -80,6 +85,12 @@ const bootstrap = async () => {
     (0, connectionDB_1.checkConnectionDB)();
     await redis_service_1.default.connect();
     app.use("/auth", auth_controller_1.default);
+    app.use("/posts", post_controller_1.default);
+    app.use("/stories", story_controller_1.default);
+    app.use("/notifications", notifications_controller_1.userNotificationsRouter);
+    app.use("/admin/notifications", notifications_controller_1.adminNotificationsRouter);
+    app.use("/admin/dashboard", dashboard_controller_1.default);
+    app.use("/users", users_controller_1.default);
     app.use("{*demo}", (req, res, next) => {
         throw new global_error_handler_1.AppError(`Url ${req.originalUrl} with method ${req.method} not found`, 404);
     });
