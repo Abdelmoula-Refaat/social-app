@@ -33,29 +33,37 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentReactionSchema = exports.updateCommentSchema = exports.createCommentSchema = void 0;
+exports.createCommentSchema = void 0;
 const z = __importStar(require("zod"));
 const generalRules_1 = require("../../common/utils/generalRules");
+const post_enum_1 = require("../../common/enum/post.enum");
 exports.createCommentSchema = {
     body: z.strictObject({
-        content: z.string().min(1).max(5000),
-    }),
-};
-exports.updateCommentSchema = {
-    body: z.strictObject({
-        content: z.string().min(1).max(5000),
+        content: z.string().optional(),
+        attachments: z.array(generalRules_1.GeneralRules.file).optional(),
+        tags: z.array(generalRules_1.GeneralRules.id).optional(),
+        onModel: z.enum(post_enum_1.On_Model_Enum),
+    }).superRefine((args, ctx) => {
+        if (!args.content && !args.attachments?.length) {
+            ctx.addIssue({
+                code: "custom",
+                path: ["content"],
+                message: "Content is required",
+            });
+        }
+        if (args?.tags) {
+            const uniqueTags = new Set(args.tags);
+            if (args.tags.length !== uniqueTags.size) {
+                ctx.addIssue({
+                    code: "custom",
+                    path: ["tags"],
+                    message: "Duplicated tags",
+                });
+            }
+        }
     }),
     params: z.strictObject({
         postId: generalRules_1.GeneralRules.id,
-        commentId: generalRules_1.GeneralRules.id,
-    }),
-};
-exports.commentReactionSchema = {
-    body: z.strictObject({
-        emoji: z.string().min(1).max(32),
-    }),
-    params: z.strictObject({
-        postId: generalRules_1.GeneralRules.id,
-        commentId: generalRules_1.GeneralRules.id,
+        commentId: generalRules_1.GeneralRules.id.optional(),
     }),
 };

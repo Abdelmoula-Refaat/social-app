@@ -9,6 +9,8 @@ import commentRouter from "../comments/comment.controller";
 
 const postRouter = Router();
 
+postRouter.use("/:postId/comments{/:commentId/replies}", commentRouter);
+
 postRouter.get(
   "/feed",
   authentication,

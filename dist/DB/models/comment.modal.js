@@ -34,18 +34,32 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const paranoid_plugin_1 = require("../plugins/paranoid.plugin");
-const reactionSchema = new mongoose_1.default.Schema({
-    userId: { type: mongoose_1.Types.ObjectId, ref: "User", required: true },
-    emoji: { type: String, required: true, trim: true, maxlength: 32 },
-}, { _id: false });
+const post_enum_1 = require("../../common/enum/post.enum");
 const commentSchema = new mongoose_1.default.Schema({
-    post: { type: mongoose_1.Types.ObjectId, ref: "Post", required: true, index: true },
+    content: {
+        type: String,
+        min: 1,
+        required: function () {
+            return !this.attachments?.length;
+        },
+    },
+    attachments: [String],
+    folderId: String,
+    likes: [{ type: mongoose_1.Types.ObjectId, ref: "User" }],
+    tags: [{ type: mongoose_1.Types.ObjectId, ref: "User" }],
     createdBy: { type: mongoose_1.Types.ObjectId, ref: "User", required: true },
-    content: { type: String, required: true, trim: true, minlength: 1, maxlength: 5000 },
-    reactions: { type: [reactionSchema], default: [] },
-    deletedAt: { type: Date },
-}, { timestamps: true, strictQuery: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
-(0, paranoid_plugin_1.applyParanoidPlugin)(commentSchema);
-const CommentModel = mongoose_1.default.models.Comment || mongoose_1.default.model("Comment", commentSchema);
-exports.default = CommentModel;
+    refId: { type: mongoose_1.Types.ObjectId, refpath: "onModel", required: true },
+    onModel: { type: String, enum: post_enum_1.On_Model_Enum, required: true },
+}, {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    strictQuery: true,
+});
+commentSchema.virtual("replies", {
+    ref: "Comment",
+    localField: "_id",
+    foreignField: "refId",
+});
+const commentModel = mongoose_1.default.model("Comment", commentSchema);
+exports.default = commentModel;

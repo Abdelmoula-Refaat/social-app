@@ -3,8 +3,7 @@ import { Types } from "mongoose";
 import { Availability_Enum } from "../enum/post.enum";
 
 export const AvailabilityPost = (req: Request) => {
-  return {
-    $or: [
+  return [
       { availability: Availability_Enum.public },
       { availability: Availability_Enum.only_me, createdBy: req?.user?._id! },
       {
@@ -12,8 +11,8 @@ export const AvailabilityPost = (req: Request) => {
         createdBy: { $in: [...(req.user?.friends || []), req.user?._id!] },
       },
       { tags: { $in: [req.user?._id] } },
-    ],
-  };
+  ];
+  
 };
 
 /** Facebook-style home feed: posts from you and friends that pass visibility rules */

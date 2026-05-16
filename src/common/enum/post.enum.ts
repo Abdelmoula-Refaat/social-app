@@ -8,3 +8,8 @@ export enum Availability_Enum {
     friends = "friends",
     only_me = "only_me"
 }
+
+export enum On_Model_Enum {
+    Post = "Post",
+    Comment = "Comment",
+}

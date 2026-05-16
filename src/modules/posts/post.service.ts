@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { Store_Enum } from "../../common/enum/multer.enum";
 import { AvailabilityPost, feedPostFilter, profilePostsFilter } from "../../common/utils/post.utils";
 import { updatePostDto } from "./post.dto";
+import { populate } from "dotenv";
 
 function postObjectId(value: string | string[] | undefined): Types.ObjectId {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -96,12 +97,23 @@ class PostService {
       limit: +req?.query?.limit!,
       sort: { createdAt: -1 },
       search: {
+        $or: [
         ...AvailabilityPost(req),
+      ],
         ...(req.query?.search
           ? {
               $or: [{ content: { $regex: req.query?.search, $options: "i" } }],
             }
           : {}),
+      },
+      populate: { 
+        path: "comments",
+        match: { 
+          commentId: {$exists: false}
+        },
+        populate: { 
+          path: "replies"
+        }
       },
     });
 

@@ -1,6 +1,8 @@
 import express from "express";
 import type { Response, Request, NextFunction } from "express";
 import cors from "cors";
+import { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLNonNull, GraphQLInt, GraphQLBoolean, GraphQLList } from "graphql";
+import { createHandler } from "graphql-http/lib/use/express";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { PORT } from "./config/config.service";
@@ -41,6 +43,50 @@ const bootstrap = async () => {
     app.get("/", (req: Request, res: Response, next: NextFunction) => {
         res.status(200).json({ message: "Welcome on SocialMedia App........" });
     });
+
+    const users = [
+        { id: 1, name: "omar", age: 25},
+        { id: 2, name: "ahmed", age: 28 },
+        { id: 3, name: "ali", age: 26}
+    ];
+
+    let queryObject = new GraphQLObjectType({
+        name: "getUser",
+        fields: {
+            id: { type: GraphQLInt },
+            name: { type: GraphQLString },
+            age: { type: GraphQLInt }
+        }
+    });
+
+    const schema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+            name: "queryRoot",
+            fields: {
+                getUser: {
+                    type: queryObject,
+                    args: { name: { type: new GraphQLNonNull(GraphQLString) } },
+                    resolve: (parent, args) => {
+                        const { name } = args;
+                        const user =  users.find((user) => user.name === name);
+                        if(!user) {
+                            throw new AppError("User not exist");
+                        }
+                        return user;
+                    }
+                },
+
+                listUsers: {
+                    type: new GraphQLList(queryObject),
+                    resolve: () => {
+                        return users;
+                    }
+                }
+            }
+        })
+    });
+
+    app.use("/graphql", createHandler({ schema }));
 
     // app.post("/send-notification", async (req: Request, res: Response, next: NextFunction) => {
         

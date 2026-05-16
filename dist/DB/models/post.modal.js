@@ -76,6 +76,11 @@ const postSchema = new mongoose_1.default.Schema({
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
 });
+postSchema.virtual("comments", {
+    ref: "Comment",
+    localField: "_id",
+    foreignField: "refId",
+});
 (0, paranoid_plugin_1.applyParanoidPlugin)(postSchema);
 postSchema.post("findOneAndDelete", async function (doc) {
     if (!doc?._id)

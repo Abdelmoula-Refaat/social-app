@@ -45,6 +45,7 @@ const multer_enum_1 = require("../../common/enum/multer.enum");
 const validation_1 = require("../../common/middleware/validation");
 const comment_controller_1 = __importDefault(require("../comments/comment.controller"));
 const postRouter = (0, express_1.Router)();
+postRouter.use("/:postId/comments{/:commentId/replies}", comment_controller_1.default);
 postRouter.get("/feed", authentication_1.authentication, post_service_1.default.getFeed);
 postRouter.get("/profile/:userId", authentication_1.authentication, post_service_1.default.getProfilePosts);
 postRouter.use("/:postId/comments", comment_controller_1.default);

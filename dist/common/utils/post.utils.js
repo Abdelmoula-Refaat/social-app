@@ -4,17 +4,15 @@ exports.feedPostFilter = exports.AvailabilityPost = void 0;
 exports.profilePostsFilter = profilePostsFilter;
 const post_enum_1 = require("../enum/post.enum");
 const AvailabilityPost = (req) => {
-    return {
-        $or: [
-            { availability: post_enum_1.Availability_Enum.public },
-            { availability: post_enum_1.Availability_Enum.only_me, createdBy: req?.user?._id },
-            {
-                availability: post_enum_1.Availability_Enum.friends,
-                createdBy: { $in: [...(req.user?.friends || []), req.user?._id] },
-            },
-            { tags: { $in: [req.user?._id] } },
-        ],
-    };
+    return [
+        { availability: post_enum_1.Availability_Enum.public },
+        { availability: post_enum_1.Availability_Enum.only_me, createdBy: req?.user?._id },
+        {
+            availability: post_enum_1.Availability_Enum.friends,
+            createdBy: { $in: [...(req.user?.friends || []), req.user?._id] },
+        },
+        { tags: { $in: [req.user?._id] } },
+    ];
 };
 exports.AvailabilityPost = AvailabilityPost;
 const feedPostFilter = (req) => {

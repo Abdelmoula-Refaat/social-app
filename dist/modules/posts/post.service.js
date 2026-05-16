@@ -88,12 +88,23 @@ class PostService {
             limit: +req?.query?.limit,
             sort: { createdAt: -1 },
             search: {
-                ...(0, post_utils_1.AvailabilityPost)(req),
+                $or: [
+                    ...(0, post_utils_1.AvailabilityPost)(req),
+                ],
                 ...(req.query?.search
                     ? {
                         $or: [{ content: { $regex: req.query?.search, $options: "i" } }],
                     }
                     : {}),
+            },
+            populate: {
+                path: "comments",
+                match: {
+                    commentId: { $exists: false }
+                },
+                populate: {
+                    path: "replies"
+                }
             },
         });
         (0, response_success_1.successResponse)({ res, data: posts });
