@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-const graphql_1 = require("graphql");
 const express_2 = require("graphql-http/lib/use/express");
 const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = require("express-rate-limit");
@@ -22,6 +21,7 @@ const story_controller_1 = __importDefault(require("./modules/stories/story.cont
 const notifications_controller_1 = require("./modules/notifications/notifications.controller");
 const dashboard_controller_1 = __importDefault(require("./modules/dashboard/dashboard.controller"));
 const users_controller_1 = __importDefault(require("./modules/users/users.controller"));
+const graphql_schema_1 = require("./modules/graphql/graphql.schema");
 const app = (0, express_1.default)();
 const port = Number(config_service_1.PORT);
 const bootstrap = async () => {
@@ -39,45 +39,7 @@ const bootstrap = async () => {
     app.get("/", (req, res, next) => {
         res.status(200).json({ message: "Welcome on SocialMedia App........" });
     });
-    const users = [
-        { id: 1, name: "omar", age: 25 },
-        { id: 2, name: "ahmed", age: 28 },
-        { id: 3, name: "ali", age: 26 }
-    ];
-    let queryObject = new graphql_1.GraphQLObjectType({
-        name: "getUser",
-        fields: {
-            id: { type: graphql_1.GraphQLInt },
-            name: { type: graphql_1.GraphQLString },
-            age: { type: graphql_1.GraphQLInt }
-        }
-    });
-    const schema = new graphql_1.GraphQLSchema({
-        query: new graphql_1.GraphQLObjectType({
-            name: "queryRoot",
-            fields: {
-                getUser: {
-                    type: queryObject,
-                    args: { name: { type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLString) } },
-                    resolve: (parent, args) => {
-                        const { name } = args;
-                        const user = users.find((user) => user.name === name);
-                        if (!user) {
-                            throw new global_error_handler_1.AppError("User not exist");
-                        }
-                        return user;
-                    }
-                },
-                listUsers: {
-                    type: new graphql_1.GraphQLList(queryObject),
-                    resolve: () => {
-                        return users;
-                    }
-                }
-            }
-        })
-    });
-    app.use("/graphql", (0, express_2.createHandler)({ schema }));
+    app.use("/graphql", (0, express_2.createHandler)({ schema: graphql_schema_1.gql_Schema, context: (req) => ({ req }) }));
     app.get("/uploadDeleteFolder", async (req, res, next) => {
         const { folderName } = req.body;
         let result = await new s3_service_1.S3Service().deleteFolder(folderName);

@@ -33,9 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAccountQuery = exports.updateProfileSchema = exports.resetPasswordSchema = exports.forgetPasswordSchema = exports.confirmEmailSchema = exports.signupSchema = exports.signinSchema = exports.reSendOtpSchema = void 0;
+exports.deleteAccountQuery = exports.updateProfileSchema = exports.resetPasswordSchema = exports.forgetPasswordSchema = exports.confirmEmailSchema = exports.signupSchema = exports.signinSchema = exports.reSendOtpSchema = exports.getUserSchema = void 0;
 const z = __importStar(require("zod"));
 const user_enum_1 = require("../../common/enum/user.enum");
+exports.getUserSchema = z.strictObject({
+    token: z.string(),
+});
 exports.reSendOtpSchema = {
     body: z.strictObject({
         email: z.email("Invalid email address"),

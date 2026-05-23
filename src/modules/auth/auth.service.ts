@@ -411,6 +411,16 @@ class AuthService {
 
         successResponse({ res, data: { Key, url} });
     }
+
+    // =============== graphql =============
+
+    getUsers = async () => {
+        return await this._userRepo.find({ filter: {} });
+    }
+
+    getUser = async (id: any) => {
+        return await this._userRepo.findOne({ filter: { _id: id } });
+    }
  
 }
 

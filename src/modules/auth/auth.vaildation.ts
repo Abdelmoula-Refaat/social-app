@@ -1,6 +1,10 @@
 import * as z from "zod";
 import { GenderEnum } from "../../common/enum/user.enum";
 
+export const getUserSchema = z.strictObject({
+    token: z.string(),
+  });
+
 export const reSendOtpSchema = {
   body: z.strictObject({
     email: z.email("Invalid email address"),

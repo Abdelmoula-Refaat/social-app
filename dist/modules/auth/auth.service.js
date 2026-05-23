@@ -322,5 +322,11 @@ class AuthService {
         });
         (0, response_success_1.successResponse)({ res, data: { Key, url } });
     };
+    getUsers = async () => {
+        return await this._userRepo.find({ filter: {} });
+    };
+    getUser = async (id) => {
+        return await this._userRepo.findOne({ filter: { _id: id } });
+    };
 }
 exports.default = new AuthService();
