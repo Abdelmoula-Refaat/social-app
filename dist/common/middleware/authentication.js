@@ -3,15 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authentication_gql = exports.authentication = void 0;
+exports.authentication_gql = exports.authentication = exports.decodedToken_and_fetchUser = void 0;
 const global_error_handler_1 = require("../utils/global-error-handler");
 const token_service_1 = __importDefault(require("../service/token.service"));
 const redis_service_1 = __importDefault(require("../service/redis.service"));
 const user_repository_1 = __importDefault(require("../../DB/repositories/user.repository"));
 const config_service_1 = require("../../config/config.service");
 const userModel = new user_repository_1.default();
-const authentication = async (req, res, next) => {
-    const { authorization } = req.headers;
+const decodedToken_and_fetchUser = async (authorization) => {
     if (!authorization) {
         throw new global_error_handler_1.AppError("token not found");
     }
@@ -44,6 +43,12 @@ const authentication = async (req, res, next) => {
     if (revokedToken) {
         throw new global_error_handler_1.AppError("Token has been revoked");
     }
+    return { user, decoded };
+};
+exports.decodedToken_and_fetchUser = decodedToken_and_fetchUser;
+const authentication = async (req, res, next) => {
+    const { authorization } = req.headers;
+    const { user, decoded } = await (0, exports.decodedToken_and_fetchUser)(authorization);
     req.user = user;
     req.decoded = decoded;
     next();

@@ -7,9 +7,8 @@ import { ACCESS_SECRET_KEY_Admin, ACCESS_SECRET_KEY_USER, PERFIX_Admin, PERFIX_U
 
 const userModel = new UserRepository();
 
-export const authentication = async (req: Request, res: Response, next: NextFunction) => {
-    const { authorization } = req.headers;
-    if (!authorization) {
+export const decodedToken_and_fetchUser = async (authorization: string) => {
+     if (!authorization) {
         throw new AppError("token not found");
     }
 
@@ -49,6 +48,14 @@ export const authentication = async (req: Request, res: Response, next: NextFunc
     if (revokedToken) {
         throw new AppError("Token has been revoked");
     }
+
+    return { user, decoded };
+}
+
+export const authentication = async (req: Request, res: Response, next: NextFunction) => {
+    const { authorization } = req.headers;
+    
+    const { user, decoded } = await decodedToken_and_fetchUser(authorization!);
 
     req.user = user;
     req.decoded = decoded;

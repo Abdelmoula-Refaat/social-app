@@ -21,6 +21,11 @@ import {
 import dashboardRouter from "./modules/dashboard/dashboard.controller";
 import usersRouter from "./modules/users/users.controller";
 import { gql_Schema } from "./modules/graphql/graphql.schema";
+import { Server } from "socket.io";
+import { Socket } from "node:dgram";
+import { decodedToken_and_fetchUser } from "./common/middleware/authentication";
+import socketGateway from "./modules/realtime/socket.gateway";
+import chatRouter from "./modules/chat/chat.contrroller";
 
 const app: express.Application = express();
 const port:number = Number(PORT);
@@ -176,6 +181,7 @@ const bootstrap = async () => {
     app.use("/admin/notifications", adminNotificationsRouter);
     app.use("/admin/dashboard", dashboardRouter);
     app.use("/users", usersRouter);
+    app.use("/chat", chatRouter);
 
     app.use("{*demo}", (req: Request, res: Response, next: NextFunction) => {
         throw new AppError(`Url ${req.originalUrl} with method ${req.method} not found`, 404);
@@ -183,10 +189,11 @@ const bootstrap = async () => {
 
     app.use(globalErrorHandler);
     
-    app.listen(port, () => {
+    const httpServer = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
-    
+
+    await socketGateway.initIo(httpServer);
     
 }
 

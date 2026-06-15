@@ -190,10 +190,18 @@ class AuthService {
         });
     };
     getProfile = async (req, res, next) => {
+        const user = await this._userRepo.findOne({
+            filter: { _id: req.user?._id },
+            populate: [
+                {
+                    path: "friends"
+                },
+            ],
+        });
         (0, response_success_1.successResponse)({
             res,
-            message: "User profile retrieved successfully",
-            data: { user: req.user },
+            message: "success signin",
+            data: { user },
         });
     };
     resendOtp = async (req, res, next) => {

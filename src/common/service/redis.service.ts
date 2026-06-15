@@ -174,6 +174,37 @@ class RedisService {
 
     return await this.client.del(this.key(userId));
   }
+
+
+  socketKey(userId: Types.ObjectId){
+    return `user:socket:${userId}`;
+  }
+
+  async addSocket({ userId, SocketId } : { userId: Types.ObjectId, SocketId: string}){
+
+    return await this.client.sAdd(this.socketKey(userId), SocketId);
+  }
+
+  async removeSocket({ userId, SocketId } : { userId: Types.ObjectId, SocketId: string}){
+
+    return await this.client.sRem(this.socketKey(userId), SocketId);
+  }
+
+  async getSockets( userId: Types.ObjectId ){
+
+    return await this.client.sMembers(this.socketKey(userId));
+  }
+
+  async hasSockets( userId: Types.ObjectId ){
+
+    return await this.client.sCard(this.socketKey(userId));
+  }
+
+  async removeSocketsUser( userId: Types.ObjectId){
+
+    return await this.client.del(this.socketKey(userId));
+  }
+  
 }
 
 export default new RedisService();

@@ -22,6 +22,8 @@ const notifications_controller_1 = require("./modules/notifications/notification
 const dashboard_controller_1 = __importDefault(require("./modules/dashboard/dashboard.controller"));
 const users_controller_1 = __importDefault(require("./modules/users/users.controller"));
 const graphql_schema_1 = require("./modules/graphql/graphql.schema");
+const socket_gateway_1 = __importDefault(require("./modules/realtime/socket.gateway"));
+const chat_contrroller_1 = __importDefault(require("./modules/chat/chat.contrroller"));
 const app = (0, express_1.default)();
 const port = Number(config_service_1.PORT);
 const bootstrap = async () => {
@@ -94,12 +96,14 @@ const bootstrap = async () => {
     app.use("/admin/notifications", notifications_controller_1.adminNotificationsRouter);
     app.use("/admin/dashboard", dashboard_controller_1.default);
     app.use("/users", users_controller_1.default);
+    app.use("/chat", chat_contrroller_1.default);
     app.use("{*demo}", (req, res, next) => {
         throw new global_error_handler_1.AppError(`Url ${req.originalUrl} with method ${req.method} not found`, 404);
     });
     app.use(global_error_handler_1.globalErrorHandler);
-    app.listen(port, () => {
+    const httpServer = app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
+    await socket_gateway_1.default.initIo(httpServer);
 };
 exports.default = bootstrap;

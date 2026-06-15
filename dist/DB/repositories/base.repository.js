@@ -11,7 +11,7 @@ class BaseRepository {
     async findById(id) {
         return this.model.findById(id);
     }
-    async findOne({ filter, projection, }) {
+    async findOne({ filter, projection, populate, }) {
         return this.model.findOne(filter, projection);
     }
     async find({ filter, projection, options, }) {

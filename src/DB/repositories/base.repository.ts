@@ -18,9 +18,11 @@ abstract class BaseRepository<TDocument> {
   async findOne({
     filter,
     projection,
+    populate,
   }: {
     filter: QueryFilter<TDocument>;
     projection?: ProjectionType<TDocument>;
+    populate?: PopulateOptions | (string | PopulateOptions)[];
   }): Promise<HydratedDocument<TDocument> | null> {
     return this.model.findOne(filter, projection);
   }

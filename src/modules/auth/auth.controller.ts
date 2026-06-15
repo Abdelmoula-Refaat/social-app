@@ -5,8 +5,11 @@ import * as authValidation from "./auth.vaildation";
 import { authentication } from "../../common/middleware/authentication";
 import multerCloud from "../../common/middleware/multer.cloud";
 import { Store_Enum } from "../../common/enum/multer.enum";
+import chatRouter from "../chat/chat.contrroller";
 
 const authRouter = Router();
+
+authRouter.use("/:userId/chat", chatRouter);
 
 authRouter.post( /signup/, validation(authValidation.signupSchema), AuthService.signup,);
 authRouter.post("/signup/gmail/", AuthService.signUpWithGmail);

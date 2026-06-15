@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { IUser } from "../../DB/models/user.modal";
 import { SignupDto, ConfirmEmailDto, SigninDto, ForgetPasswordDto, ResetPasswordDto } from "./auth.dto";
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Types } from "mongoose";
 import UserRepository from "../../DB/repositories/user.repository";
 import { encrypt } from "../../common/utils/security/encrypt.security";
 import { Compare, Hash } from "../../common/utils/security/hash";
@@ -28,6 +28,7 @@ import { OAuth2Client, TokenPayload } from "google-auth-library";
 import tokenService from "../../common/service/token.service";
 import { S3Service } from "../../common/service/s3.service";
 import notificationService from "../../common/service/notification.service";
+import ChatRepository from "../../DB/repositories/chat.repository";
 
 class AuthService {
   private readonly _userRepo = new UserRepository();
@@ -35,6 +36,7 @@ class AuthService {
   private readonly _tokenService = TokenService;
   private readonly _s3Service = new S3Service();
   private readonly _notificationService = notificationService;
+  private readonly _chatRepo = new ChatRepository();
 
   constructor() {}
 
@@ -239,10 +241,27 @@ class AuthService {
     });
   };
   getProfile = async (req: Request, res: Response, next: NextFunction) => {
+    const user = await this._userRepo.findOne({
+      filter: { _id: req.user?._id as Types.ObjectId },
+      populate: [
+        {
+          path: "friends"
+        },
+      ],
+    });
+    const groups = await this._chatRepo.find({
+      filter: {
+        participants: {
+          $in: [req?.user?._id ],
+        },
+        group: { $exists: true }
+      
+      },
+    });
     successResponse({
       res,
-      message: "User profile retrieved successfully",
-      data: { user: req.user },
+      message: "success signin",
+      data: { user, groups },
     });
   };
 
